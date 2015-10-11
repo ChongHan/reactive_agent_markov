@@ -10,7 +10,7 @@ public class State
 {
     private City from;
     private City to;
-    private ActionDecision bestAction;
+    private City bestAction;
     private double bestReward;
     private double pre_bestReward;
 
@@ -22,12 +22,12 @@ public class State
         bestReward = pre_bestReward = 0;
     }
 
-    public ActionDecision getBestAction()
+    public City getBestAction()
     {
         return bestAction;
     }
 
-    public void setBestAction(ActionDecision bestAction)
+    public void setBestAction(City bestAction)
     {
         this.bestAction = bestAction;
     }
@@ -70,8 +70,7 @@ public class State
 
         State state = (State) o;
 
-        if (!from.equals(state.from)) return false;
-        return to.equals(state.to);
+        return to.equals(state.to) && !from.equals(state.from);
 
     }
 
