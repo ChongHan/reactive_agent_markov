@@ -62,6 +62,20 @@ public class State
         this.bestReward = bestReward;
     }
 
+    public boolean updateBestReward(double newBest, City newBestAction)
+    {
+        if (newBest > bestReward)
+        {
+            pre_bestReward = bestReward;
+            bestReward = newBest;
+            bestAction = newBestAction;
+
+            return true;
+        }
+
+        return false;
+    }
+
     @Override
     public boolean equals(Object o)
     {

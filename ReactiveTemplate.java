@@ -1,59 +1,149 @@
 package template;
 
-import java.util.LinkedList;
-import java.util.Random;
-
-import logist.simulation.Vehicle;
 import logist.agent.Agent;
 import logist.behavior.ReactiveBehavior;
 import logist.plan.Action;
 import logist.plan.Action.Move;
 import logist.plan.Action.Pickup;
+import logist.simulation.Vehicle;
 import logist.task.Task;
 import logist.task.TaskDistribution;
 import logist.topology.Topology;
 import logist.topology.Topology.City;
 
-public class ReactiveTemplate implements ReactiveBehavior {
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Random;
 
-	private Random random;
-	private double pPickup;
+public class ReactiveTemplate implements ReactiveBehavior
+{
 
-	private LinkedList<State> stateList = new LinkedList<>();
+    private Random random;
+    private double pPickup;
 
-	@Override
-	public void setup(Topology topology, TaskDistribution td, Agent agent) {
+    private LinkedList<State> stateList = new LinkedList<>();
+    private List<City> cityList;
+    private City tempBestAction;
 
-		// Reads the discount factor from the agents.xml file.
-		// If the property is not present it defaults to 0.95
-		Double discount = agent.readProperty("discount-factor", Double.class,
-				0.95);
+    @Override
+    public void setup(Topology topology, TaskDistribution td, Agent agent)
+    {
 
-		this.random = new Random();
-		this.pPickup = discount;
-	}
+        // Reads the discount factor from the agents.xml file.
+        // If the property is not present it defaults to 0.95
+        Double discount = agent.readProperty("discount-factor", Double.class,
+                0.95);
 
-	@Override
-	public Action act(Vehicle vehicle, Task availableTask) {
-		Action action;
+        this.random = new Random();
+        this.pPickup = discount;
+    }
 
-		if (availableTask == null || random.nextDouble() > pPickup) {
-			City currentCity = vehicle.getCurrentCity();
-			action = new Move(currentCity.randomNeighbor(random));
-		} else {
-			action = new Pickup(availableTask);
-		}
-		return action;
-	}
+    @Override
+    public Action act(Vehicle vehicle, Task availableTask)
+    {
+        Action action;
 
-	private void initState(Topology t)
-	{
-		for (City from : t)
-		{
-			for (City to : t)
-			{
-				stateList.add(new State(from, to));
-			}
-		}
-	}
+        if (availableTask == null || random.nextDouble() > pPickup)
+        {
+            City currentCity = vehicle.getCurrentCity();
+            action = new Move(currentCity.randomNeighbor(random));
+        } else
+        {
+            action = new Pickup(availableTask);
+        }
+        return action;
+    }
+
+    private void initState(Topology t)
+    {
+        cityList = t.cities();
+        for (City from : t)
+        {
+            for (City to : t)
+            {
+                stateList.add(new State(from, to));
+            }
+        }
+    }
+
+    private void valueIteration(TaskDistribution td)
+    {
+        City currentCity;
+        City taskDest;
+        List<City> neighbourList;
+
+        double reward;
+        double q;
+        for (State s : stateList)
+        {
+            currentCity = s.getFrom();
+            taskDest = s.getTo();
+            neighbourList = s.getFrom().neighbors();
+
+            if (!currentCity.hasNeighbor(taskDest))
+            {
+                neighbourList.add(taskDest);
+            }
+
+            double maxQ;
+
+            maxQ = computeMaxQ(currentCity, taskDest, neighbourList, td);
+
+            s.updateBestReward(maxQ, tempBestAction);
+        }
+    }
+
+    private double computeMaxQ(City currentCity, City taskDestCity, List<City> reachableCity, TaskDistribution td)
+    {
+        double maxQ = 0;
+
+        for (City nextCity : reachableCity)
+        {
+            double sum = 0;
+            for (City nextPossibleCity : cityList)
+            {
+                State futureState = new State(nextCity, nextPossibleCity);
+                if (!nextPossibleCity.equals(nextCity))
+                {
+                    sum += td.probability(nextCity, nextPossibleCity) * getBestValue(futureState);
+                }
+                sum += td.probability(nextCity, null) * getBestValue(futureState);
+            }
+            if (taskDestCity.equals(nextCity))
+            {
+                sum += td.reward(currentCity, taskDestCity);
+            }
+            if (sum > maxQ)
+            {
+                maxQ = sum;
+                tempBestAction = nextCity;
+            }
+        }
+        return maxQ;
+    }
+
+    private double getBestValue(State s)
+    {
+        for (State state : stateList)
+        {
+            if (state.equals(s))
+            {
+                return state.getBestReward();
+            }
+        }
+        return 0;
+    }
+
+
+    private boolean converge(LinkedList<State> stateList, double epsilon)
+    {
+        for (State s : stateList)
+        {
+            if (s.getBestReward() - s.getPre_bestReward() < epsilon)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
 }
