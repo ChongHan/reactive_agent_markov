@@ -109,10 +109,10 @@ public class ReactiveTemplate implements ReactiveBehavior
                 maxQ = computeMaxQ(currentCity, taskDest, neighbourList, td, discountFactor);
 
                 s.updateBestReward(maxQ, tempBestAction);
-
-                counter++;
             }
-        } while (!converge(1));
+
+            counter++;
+        } while (!converge(0.01));
     }
 
     private double computeMaxQ(City currentCity, City taskDestCity, List<City> reachableCity, TaskDistribution td,
@@ -163,12 +163,17 @@ public class ReactiveTemplate implements ReactiveBehavior
 
     private boolean converge(double epsilon)
     {
+        double maxDiff = 0;
+        double diff = 0;
         for (State s : stateList)
         {
-            if (s.getBestReward() - s.getPre_bestReward() < epsilon)
-            {
-                return true;
-            }
+            diff = Math.abs(s.getBestReward() - s.getPre_bestReward());
+            if (diff > maxDiff) {maxDiff = diff;}
+        }
+
+        if (maxDiff < epsilon)
+        {
+            return true;
         }
         return false;
     }
