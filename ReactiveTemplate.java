@@ -11,7 +11,6 @@ import logist.task.TaskDistribution;
 import logist.topology.Topology;
 import logist.topology.Topology.City;
 
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
@@ -59,13 +58,52 @@ public class ReactiveTemplate implements ReactiveBehavior
     {
         Action action;
 
-        if (availableTask == null || random.nextDouble() > pPickup)
+        State currentState;
+
+        if (availableTask != null)
         {
-            City currentCity = vehicle.getCurrentCity();
-            action = new Move(currentCity.randomNeighbor(random));
+            System.out.println("Task available" );
+        }
+
+        if (availableTask == null)
+        {
+            currentState = new State(vehicle.getCurrentCity(), vehicle.getCurrentCity());
+
+            State completeState = null;
+
+            for (State s : stateList)
+            {
+                if (currentState.equals(s))
+                {
+                    completeState = s;
+                }
+            }
+
+            System.out.println(currentState);
+
+            action = new Move(stateList.get(stateList.indexOf(currentState)).getBestAction());
         } else
         {
-            action = new Pickup(availableTask);
+            currentState = new State(vehicle.getCurrentCity(), availableTask.deliveryCity);
+
+            State completeState = null;
+
+            for (State s : stateList)
+            {
+                if (currentState.equals(s))
+                {
+                    completeState = s;
+                }
+            }
+
+            assert completeState != null;
+            if (availableTask.deliveryCity.equals(completeState.getBestAction()))
+            {
+                action = new Pickup(availableTask);
+            } else
+            {
+                action = new Move(stateList.get(stateList.indexOf(currentState)).getBestAction());
+            }
         }
         return action;
     }
@@ -112,7 +150,7 @@ public class ReactiveTemplate implements ReactiveBehavior
             }
 
             counter++;
-        } while (!converge(0.01));
+        } while (!converge(1));
     }
 
     private double computeMaxQ(City currentCity, City taskDestCity, List<City> reachableCity, TaskDistribution td,
@@ -168,7 +206,10 @@ public class ReactiveTemplate implements ReactiveBehavior
         for (State s : stateList)
         {
             diff = Math.abs(s.getBestReward() - s.getPre_bestReward());
-            if (diff > maxDiff) {maxDiff = diff;}
+            if (diff > maxDiff)
+            {
+                maxDiff = diff;
+            }
         }
 
         if (maxDiff < epsilon)

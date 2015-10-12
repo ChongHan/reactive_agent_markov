@@ -70,7 +70,7 @@ public class State
             bestReward = newBest;
             bestAction = newBestAction;
 
-            System.out.println("After:" + pre_bestReward + "; " + bestReward + "; " + bestAction.toString());
+//            System.out.println("After:" + pre_bestReward + "; " + bestReward + "; " + bestAction.toString());
 
             return true;
         }
@@ -86,7 +86,7 @@ public class State
 
         State state = (State) o;
 
-        return to.equals(state.to) && !from.equals(state.from);
+        return to.equals(state.to) && from.equals(state.from);
 
     }
 
