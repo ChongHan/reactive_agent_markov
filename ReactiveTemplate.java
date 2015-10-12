@@ -66,7 +66,7 @@ public class ReactiveTemplate implements ReactiveBehavior
         }
     }
 
-    private void valueIteration(TaskDistribution td)
+    private void valueIteration(TaskDistribution td, double discountFactor)
     {
         City currentCity;
         City taskDest;
@@ -74,45 +74,52 @@ public class ReactiveTemplate implements ReactiveBehavior
 
         double reward;
         double q;
-        for (State s : stateList)
+        do
         {
-            currentCity = s.getFrom();
-            taskDest = s.getTo();
-            neighbourList = s.getFrom().neighbors();
-
-            if (!currentCity.hasNeighbor(taskDest))
+            for (State s : stateList)
             {
-                neighbourList.add(taskDest);
+                currentCity = s.getFrom();
+                taskDest = s.getTo();
+                neighbourList = s.getFrom().neighbors();
+
+                if (!currentCity.hasNeighbor(taskDest))
+                {
+                    neighbourList.add(taskDest);
+                }
+
+                double maxQ;
+
+                maxQ = computeMaxQ(currentCity, taskDest, neighbourList, td, discountFactor);
+
+                s.updateBestReward(maxQ, tempBestAction);
             }
-
-            double maxQ;
-
-            maxQ = computeMaxQ(currentCity, taskDest, neighbourList, td);
-
-            s.updateBestReward(maxQ, tempBestAction);
-        }
+        } while (!converge(0.01));
     }
 
-    private double computeMaxQ(City currentCity, City taskDestCity, List<City> reachableCity, TaskDistribution td)
+    private double computeMaxQ(City currentCity, City taskDestCity, List<City> reachableCity, TaskDistribution td,
+                               double discountFactor)
     {
         double maxQ = 0;
 
         for (City nextCity : reachableCity)
         {
             double sum = 0;
-            for (City nextPossibleCity : cityList)
+            for (City nextPossibleTaskDest : cityList)
             {
-                State futureState = new State(nextCity, nextPossibleCity);
-                if (!nextPossibleCity.equals(nextCity))
+                State futureState = new State(nextCity, nextPossibleTaskDest);
+                if (!nextPossibleTaskDest.equals(nextCity))
                 {
-                    sum += td.probability(nextCity, nextPossibleCity) * getBestValue(futureState);
+                    sum += discountFactor * td.probability(nextCity, nextPossibleTaskDest) * getBestValue(futureState);
+                } else
+                {
+                    sum += discountFactor * td.probability(nextCity, null) * getBestValue(futureState);
                 }
-                sum += td.probability(nextCity, null) * getBestValue(futureState);
             }
             if (taskDestCity.equals(nextCity))
             {
                 sum += td.reward(currentCity, taskDestCity);
             }
+
             if (sum > maxQ)
             {
                 maxQ = sum;
@@ -135,7 +142,7 @@ public class ReactiveTemplate implements ReactiveBehavior
     }
 
 
-    private boolean converge(LinkedList<State> stateList, double epsilon)
+    private boolean converge(double epsilon)
     {
         for (State s : stateList)
         {
