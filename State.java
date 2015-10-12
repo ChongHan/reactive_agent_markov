@@ -70,6 +70,8 @@ public class State
             bestReward = newBest;
             bestAction = newBestAction;
 
+            System.out.println("After:" + pre_bestReward + "; " + bestReward + "; " + bestAction.toString());
+
             return true;
         }
 

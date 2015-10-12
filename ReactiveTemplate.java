@@ -11,6 +11,7 @@ import logist.task.TaskDistribution;
 import logist.topology.Topology;
 import logist.topology.Topology.City;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
@@ -25,6 +26,8 @@ public class ReactiveTemplate implements ReactiveBehavior
     private List<City> cityList;
     private City tempBestAction;
 
+    private int counter = 0;
+
     @Override
     public void setup(Topology topology, TaskDistribution td, Agent agent)
     {
@@ -36,6 +39,19 @@ public class ReactiveTemplate implements ReactiveBehavior
 
         this.random = new Random();
         this.pPickup = discount;
+
+        this.initState(topology);
+
+        this.valueIteration(td, discount);
+
+        System.out.println("counter = " + counter);
+
+        for (State s : stateList)
+        {
+            System.out.println(s);
+        }
+
+
     }
 
     @Override
@@ -84,7 +100,8 @@ public class ReactiveTemplate implements ReactiveBehavior
 
                 if (!currentCity.hasNeighbor(taskDest))
                 {
-                    neighbourList.add(taskDest);
+                    List<City> newList = new LinkedList<City>(neighbourList);
+                    newList.add(taskDest);
                 }
 
                 double maxQ;
@@ -92,8 +109,10 @@ public class ReactiveTemplate implements ReactiveBehavior
                 maxQ = computeMaxQ(currentCity, taskDest, neighbourList, td, discountFactor);
 
                 s.updateBestReward(maxQ, tempBestAction);
+
+                counter++;
             }
-        } while (!converge(0.01));
+        } while (!converge(1));
     }
 
     private double computeMaxQ(City currentCity, City taskDestCity, List<City> reachableCity, TaskDistribution td,
