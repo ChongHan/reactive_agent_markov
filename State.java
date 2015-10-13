@@ -1,5 +1,6 @@
 package template;
 
+import com.sun.istack.internal.NotNull;
 import logist.topology.Topology.City;
 
 
@@ -19,10 +20,11 @@ public class State
         this.from = from;
         this.to = to;
 
+        bestAction = from;
         bestReward = pre_bestReward = 0;
     }
 
-    public City getBestAction()
+    @NotNull public City getBestAction()
     {
         return bestAction;
     }
@@ -52,7 +54,7 @@ public class State
         this.pre_bestReward = pre_bestReward;
     }
 
-    public double getBestReward()
+    @NotNull public double getBestReward()
     {
         return bestReward;
     }

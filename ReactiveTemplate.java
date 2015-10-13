@@ -1,5 +1,6 @@
 package template;
 
+import com.sun.istack.internal.NotNull;
 import logist.agent.Agent;
 import logist.behavior.ReactiveBehavior;
 import logist.plan.Action;
@@ -17,9 +18,9 @@ import java.util.List;
 public class ReactiveTemplate implements ReactiveBehavior
 {
 
-    private LinkedList<State> stateList = new LinkedList<>(); // All possible states
-    private List<City> cityList;                              // All reachable cities
-    private City tempBestAction;                              // temp best action corresponding to an iteration of maxQ
+    private final LinkedList<State> stateList = new LinkedList<>(); // All possible states
+    private List<City> cityList;                                    // All reachable cities
+    private City tempBestAction;                                    // temp best action corresponding to an iteration of maxQ
 
 
     @Override
@@ -44,7 +45,7 @@ public class ReactiveTemplate implements ReactiveBehavior
     @Override
     public Action act(Vehicle vehicle, Task availableTask)
     {
-        Action action = null;
+        Action action;
 
         State currentState;
 
@@ -53,6 +54,8 @@ public class ReactiveTemplate implements ReactiveBehavior
             currentState = new State(vehicle.getCurrentCity(), vehicle.getCurrentCity());
 
             State completeState = lookUpState(currentState);
+
+            City bestAction = completeState.getBestAction();
 
             City nextMove = completeState.getBestAction();
 
@@ -66,7 +69,9 @@ public class ReactiveTemplate implements ReactiveBehavior
 
             State completeState = lookUpState(currentState);
 
-            if (availableTask.deliveryCity.equals(completeState.getBestAction()))
+            City bestAction = completeState.getBestAction();
+
+            if (bestAction != null && availableTask.deliveryCity.equals(bestAction))
             {
                 action = new Pickup(availableTask);
             } else
@@ -110,9 +115,6 @@ public class ReactiveTemplate implements ReactiveBehavior
         City taskDest;
         List<City> neighbourList;
 
-        double reward;
-        double q;
-        double cost;
         do
         {
             for (State s : stateList)
@@ -240,7 +242,7 @@ public class ReactiveTemplate implements ReactiveBehavior
      *
      * @return complete state
      */
-    private State lookUpState(State DesiredState)
+    @NotNull private State lookUpState(State DesiredState)
     {
         for (State state : stateList)
         {
