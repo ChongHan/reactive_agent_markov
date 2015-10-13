@@ -40,9 +40,9 @@ public class ReactiveTemplate implements ReactiveBehavior
         this.pPickup = discount;
 
         this.initState(topology);
-
         this.valueIteration(td, discount);
 
+        //Print out checks
         System.out.println("counter = " + counter);
 
         for (State s : stateList)
@@ -60,50 +60,35 @@ public class ReactiveTemplate implements ReactiveBehavior
 
         State currentState;
 
-        if (availableTask != null)
-        {
-            System.out.println("Task available" );
-        }
-
         if (availableTask == null)
         {
             currentState = new State(vehicle.getCurrentCity(), vehicle.getCurrentCity());
 
-            State completeState = null;
+            State completeState = lookUpState (currentState);
 
-            for (State s : stateList)
-            {
-                if (currentState.equals(s))
-                {
-                    completeState = s;
-                }
-            }
+            action = new Move(completeState.getBestAction());
 
-            System.out.println(currentState);
-
-            action = new Move(stateList.get(stateList.indexOf(currentState)).getBestAction());
-        } else
+            //Printout check!
+            System.out.println("No task:\n" + currentState.toString() + "\n" + action.toString());
+        }
+        else
         {
             currentState = new State(vehicle.getCurrentCity(), availableTask.deliveryCity);
 
-            State completeState = null;
-
-            for (State s : stateList)
-            {
-                if (currentState.equals(s))
-                {
-                    completeState = s;
-                }
-            }
+            State completeState = lookUpState (currentState);
 
             assert completeState != null;
             if (availableTask.deliveryCity.equals(completeState.getBestAction()))
             {
                 action = new Pickup(availableTask);
-            } else
-            {
-                action = new Move(stateList.get(stateList.indexOf(currentState)).getBestAction());
             }
+            else
+            {
+                action = new Move(completeState.getBestAction());
+            }
+
+            //Printout check!
+            System.out.println("Task available:\n" + currentState.toString() + "\n" + action.toString());
         }
         return action;
     }
@@ -217,5 +202,16 @@ public class ReactiveTemplate implements ReactiveBehavior
             return true;
         }
         return false;
+    }
+
+    private State lookUpState (State DesiredState){
+        for (State state : stateList)
+        {
+            if (DesiredState.equals(state)) {
+                return state;
+            }
+        }
+        System.out.println("ERROR: No matching state found!!!");
+        return null;
     }
 }
