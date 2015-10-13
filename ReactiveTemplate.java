@@ -64,7 +64,8 @@ public class ReactiveTemplate implements ReactiveBehavior
         {
             currentState = new State(vehicle.getCurrentCity(), vehicle.getCurrentCity());
 
-            State completeState = lookUpState (currentState);
+            State completeState;
+            completeState = lookUpState (currentState);
 
             action = new Move(completeState.getBestAction());
 
@@ -111,9 +112,6 @@ public class ReactiveTemplate implements ReactiveBehavior
         City taskDest;
         List<City> neighbourList;
 
-        double reward;
-        double q;
-        double cost;
         do
         {
             for (State s : stateList)
@@ -124,7 +122,7 @@ public class ReactiveTemplate implements ReactiveBehavior
 
                 if (!currentCity.hasNeighbor(taskDest))
                 {
-                    List<City> newList = new LinkedList<City>(neighbourList);
+                    List<City> newList = new LinkedList<>(neighbourList);
                     newList.add(taskDest);
                 }
 
@@ -147,7 +145,7 @@ public class ReactiveTemplate implements ReactiveBehavior
         for (City nextCity : reachableCity)
         {
             double sum = 0;
-            double cost = 0;
+            double cost;
             for (City nextPossibleTaskDest : cityList)
             {
                 State futureState = new State(nextCity, nextPossibleTaskDest);
@@ -195,7 +193,7 @@ public class ReactiveTemplate implements ReactiveBehavior
     private boolean converge(double epsilon)
     {
         double maxDiff = 0;
-        double diff = 0;
+        double diff;
         for (State s : stateList)
         {
             diff = Math.abs(s.getBestReward() - s.getPre_bestReward());
@@ -205,11 +203,7 @@ public class ReactiveTemplate implements ReactiveBehavior
             }
         }
 
-        if (maxDiff < epsilon)
-        {
-            return true;
-        }
-        return false;
+        return (maxDiff < epsilon);
     }
 
     private State lookUpState (State DesiredState){
