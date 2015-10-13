@@ -87,7 +87,7 @@ public class ReactiveTemplate implements ReactiveBehavior
     /**
      * initialize all possible states and reachable cities.
      *
-     * @param t
+     * @param t topology
      */
     private void initState(Topology t, Agent agent)
     {
@@ -105,9 +105,9 @@ public class ReactiveTemplate implements ReactiveBehavior
     /**
      * Markov decision process, Compute best policy.
      *
-     * @param td
-     * @param agent
-     * @param discountFactor
+     * @param td TaskDistribution
+     * @param agent agent which travels and deliver tasks
+     * @param discountFactor discount the future state reward
      */
     private void valueIteration(TaskDistribution td, Agent agent, double discountFactor)
     {
@@ -142,12 +142,12 @@ public class ReactiveTemplate implements ReactiveBehavior
     /**
      * Compute maxQ for a given state.
      *
-     * @param currentCity
-     * @param taskDestCity
-     * @param reachableCity
-     * @param td
-     * @param agent
-     * @param discountFactor
+     * @param currentCity current city
+     * @param taskDestCity task destination city
+     * @param reachableCity reachable city list after legal moves performed by the agent
+     * @param td task distrivution
+     * @param agent agent
+     * @param discountFactor sicount factor of the future reward
      *
      * @return Q(s)
      */
@@ -215,7 +215,7 @@ public class ReactiveTemplate implements ReactiveBehavior
      * Check whether the results after n iteration is good enough, difference between the previous iteration and current
      * iteration is smaller than epsilon
      *
-     * @param epsilon
+     * @param epsilon max difference between pre maxQ and current maxQ after n iterations
      *
      * @return true if diff is smaller than epsilon
      */
