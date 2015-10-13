@@ -40,7 +40,7 @@ public class ReactiveTemplate implements ReactiveBehavior
         this.pPickup = discount;
 
         this.initState(topology);
-        this.valueIteration(td, discount);
+        this.valueIteration(td, agent, discount);
 
         //Print out checks
         System.out.println("counter = " + counter);
@@ -105,7 +105,7 @@ public class ReactiveTemplate implements ReactiveBehavior
         }
     }
 
-    private void valueIteration(TaskDistribution td, double discountFactor)
+    private void valueIteration(TaskDistribution td, Agent agent, double discountFactor)
     {
         City currentCity;
         City taskDest;
@@ -113,6 +113,7 @@ public class ReactiveTemplate implements ReactiveBehavior
 
         double reward;
         double q;
+        double cost;
         do
         {
             for (State s : stateList)
@@ -129,7 +130,7 @@ public class ReactiveTemplate implements ReactiveBehavior
 
                 double maxQ;
 
-                maxQ = computeMaxQ(currentCity, taskDest, neighbourList, td, discountFactor);
+                maxQ = computeMaxQ(currentCity, taskDest, neighbourList, td, agent, discountFactor);
 
                 s.updateBestReward(maxQ, tempBestAction);
             }
@@ -139,13 +140,14 @@ public class ReactiveTemplate implements ReactiveBehavior
     }
 
     private double computeMaxQ(City currentCity, City taskDestCity, List<City> reachableCity, TaskDistribution td,
-                               double discountFactor)
+                               Agent agent, double discountFactor)
     {
         double maxQ = 0;
 
         for (City nextCity : reachableCity)
         {
             double sum = 0;
+            double cost = 0;
             for (City nextPossibleTaskDest : cityList)
             {
                 State futureState = new State(nextCity, nextPossibleTaskDest);
@@ -157,10 +159,16 @@ public class ReactiveTemplate implements ReactiveBehavior
                     sum += discountFactor * td.probability(nextCity, null) * getBestValue(futureState);
                 }
             }
+            //Add reward if the package is taken.
             if (taskDestCity.equals(nextCity))
             {
                 sum += td.reward(currentCity, taskDestCity);
             }
+
+            //Subtract the cost of the trip
+            List<Vehicle> vehicles = agent.vehicles();
+            cost = currentCity.distanceTo(nextCity) * vehicles.get(0).costPerKm();
+            sum -= cost;
 
             if (sum > maxQ)
             {
