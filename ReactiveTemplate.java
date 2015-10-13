@@ -13,19 +13,14 @@ import logist.topology.Topology.City;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Random;
 
 public class ReactiveTemplate implements ReactiveBehavior
 {
 
-    private Random random;
-    private double pPickup;
+    private LinkedList<State> stateList = new LinkedList<>(); // All possible states
+    private List<City> cityList;                              // All reachable cities
+    private City tempBestAction;                              // temp best action corresponding to an iteration of maxQ
 
-    private LinkedList<State> stateList = new LinkedList<>();
-    private List<City> cityList;
-    private City tempBestAction;
-
-    private int counter = 0;
 
     @Override
     public void setup(Topology topology, TaskDistribution td, Agent agent)
@@ -36,27 +31,20 @@ public class ReactiveTemplate implements ReactiveBehavior
         Double discount = agent.readProperty("discount-factor", Double.class,
                 0.95);
 
-        this.random = new Random();
-        this.pPickup = discount;
-
         this.initState(topology);
         this.valueIteration(td, agent, discount);
 
-        //Print out checks
-        System.out.println("counter = " + counter);
-
+        System.out.println("All possible states: ");
         for (State s : stateList)
         {
             System.out.println(s);
         }
-
-
     }
 
     @Override
     public Action act(Vehicle vehicle, Task availableTask)
     {
-        Action action;
+        Action action = null;
 
         State currentState;
 
@@ -64,25 +52,24 @@ public class ReactiveTemplate implements ReactiveBehavior
         {
             currentState = new State(vehicle.getCurrentCity(), vehicle.getCurrentCity());
 
-            State completeState = lookUpState (currentState);
+            State completeState = lookUpState(currentState);
 
-            action = new Move(completeState.getBestAction());
+            City nextMove = completeState.getBestAction();
+
+            action = new Move(nextMove);
 
             //Printout check!
             System.out.println("No task:\n" + currentState.toString() + "\n" + action.toString());
-        }
-        else
+        } else
         {
             currentState = new State(vehicle.getCurrentCity(), availableTask.deliveryCity);
 
-            State completeState = lookUpState (currentState);
+            State completeState = lookUpState(currentState);
 
-            assert completeState != null;
             if (availableTask.deliveryCity.equals(completeState.getBestAction()))
             {
                 action = new Pickup(availableTask);
-            }
-            else
+            } else
             {
                 action = new Move(completeState.getBestAction());
             }
@@ -93,6 +80,11 @@ public class ReactiveTemplate implements ReactiveBehavior
         return action;
     }
 
+    /**
+     * initialize all possible states and reachable cities.
+     *
+     * @param t
+     */
     private void initState(Topology t)
     {
         cityList = t.cities();
@@ -105,6 +97,13 @@ public class ReactiveTemplate implements ReactiveBehavior
         }
     }
 
+    /**
+     * Markov decision process, Compute best policy.
+     *
+     * @param td
+     * @param agent
+     * @param discountFactor
+     */
     private void valueIteration(TaskDistribution td, Agent agent, double discountFactor)
     {
         City currentCity;
@@ -124,7 +123,7 @@ public class ReactiveTemplate implements ReactiveBehavior
 
                 if (!currentCity.hasNeighbor(taskDest))
                 {
-                    List<City> newList = new LinkedList<City>(neighbourList);
+                    List<City> newList = new LinkedList<>(neighbourList);
                     newList.add(taskDest);
                 }
 
@@ -135,10 +134,21 @@ public class ReactiveTemplate implements ReactiveBehavior
                 s.updateBestReward(maxQ, tempBestAction);
             }
 
-            counter++;
         } while (!converge(1));
     }
 
+    /**
+     * Compute maxQ for a given state.
+     *
+     * @param currentCity
+     * @param taskDestCity
+     * @param reachableCity
+     * @param td
+     * @param agent
+     * @param discountFactor
+     *
+     * @return Q(s)
+     */
     private double computeMaxQ(City currentCity, City taskDestCity, List<City> reachableCity, TaskDistribution td,
                                Agent agent, double discountFactor)
     {
@@ -147,7 +157,7 @@ public class ReactiveTemplate implements ReactiveBehavior
         for (City nextCity : reachableCity)
         {
             double sum = 0;
-            double cost = 0;
+            double cost;
             for (City nextPossibleTaskDest : cityList)
             {
                 State futureState = new State(nextCity, nextPossibleTaskDest);
@@ -179,6 +189,13 @@ public class ReactiveTemplate implements ReactiveBehavior
         return maxQ;
     }
 
+    /**
+     * Get the bestValue V(s) stored in the stateList
+     *
+     * @param s State
+     *
+     * @return V(s) of a given state
+     */
     private double getBestValue(State s)
     {
         for (State state : stateList)
@@ -192,10 +209,18 @@ public class ReactiveTemplate implements ReactiveBehavior
     }
 
 
+    /**
+     * Check whether the results after n iteration is good enough, difference between the previous iteration and current
+     * iteration is smaller than epsilon
+     *
+     * @param epsilon
+     *
+     * @return true if diff is smaller than epsilon
+     */
     private boolean converge(double epsilon)
     {
         double maxDiff = 0;
-        double diff = 0;
+        double diff;
         for (State s : stateList)
         {
             diff = Math.abs(s.getBestReward() - s.getPre_bestReward());
@@ -205,21 +230,25 @@ public class ReactiveTemplate implements ReactiveBehavior
             }
         }
 
-        if (maxDiff < epsilon)
-        {
-            return true;
-        }
-        return false;
+        return maxDiff < epsilon;
     }
 
-    private State lookUpState (State DesiredState){
+    /**
+     * Find the corresponding state in the precomputed stateList
+     *
+     * @param DesiredState state to be searched
+     *
+     * @return complete state
+     */
+    private State lookUpState(State DesiredState)
+    {
         for (State state : stateList)
         {
-            if (DesiredState.equals(state)) {
+            if (DesiredState.equals(state))
+            {
                 return state;
             }
         }
-        System.out.println("ERROR: No matching state found!!!");
         return null;
     }
 }
