@@ -59,7 +59,7 @@ public class ReactiveTemplate implements ReactiveBehavior
             action = new Move(nextMove);
 
             //Printout check!
-            System.out.println("No task:\n" + currentState.toString() + "\n" + action.toString());
+            System.out.println("No task:\n" + completeState.toString() + "\n" + action.toString());
         } else
         {
             currentState = new State(vehicle.getCurrentCity(), availableTask.deliveryCity);
@@ -75,7 +75,7 @@ public class ReactiveTemplate implements ReactiveBehavior
             }
 
             //Printout check!
-            System.out.println("Task available:\n" + currentState.toString() + "\n" + action.toString());
+            System.out.println("Task available:\n" + completeState.toString() + "\n" + action.toString());
         }
         return action;
     }
