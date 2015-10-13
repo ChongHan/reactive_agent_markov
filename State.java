@@ -1,6 +1,7 @@
 package template;
 
 import com.sun.istack.internal.NotNull;
+import logist.agent.Agent;
 import logist.topology.Topology.City;
 
 
@@ -15,10 +16,11 @@ public class State
     private double bestReward;
     private double pre_bestReward;
 
-    public State(City from, City to)
+    public State(City from, City to, City home)
     {
         this.from = from;
         this.to = to;
+        this.bestAction = home;
 
         bestAction = from;
         bestReward = pre_bestReward = 0;
