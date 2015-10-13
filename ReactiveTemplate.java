@@ -1,7 +1,5 @@
 package template;
 
-import java.util.Random;
-
 import com.sun.istack.internal.NotNull;
 import logist.agent.Agent;
 import logist.behavior.ReactiveBehavior;
@@ -23,7 +21,6 @@ public class ReactiveTemplate implements ReactiveBehavior
     private final LinkedList<State> stateList = new LinkedList<>(); // All possible states
     private List<City> cityList;                                    // All reachable cities
     private City tempBestAction;                                    // temp best action corresponding to an iteration of maxQ
-    private Random random;
 
     @Override
     public void setup(Topology topology, TaskDistribution td, Agent agent)
@@ -91,7 +88,6 @@ public class ReactiveTemplate implements ReactiveBehavior
      */
     private void initState(Topology t, Agent agent)
     {
-        this.random = new Random();
         cityList = t.cities();
         for (City from : t)
         {
