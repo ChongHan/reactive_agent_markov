@@ -22,6 +22,8 @@ public class ReactiveTemplate implements ReactiveBehavior
     private List<City> cityList;                                    // All reachable cities
     private City tempBestAction;                                    // temp best action corresponding to an iteration of maxQ
 
+    private int counter = 0;
+
     @Override
     public void setup(Topology topology, TaskDistribution td, Agent agent)
     {
@@ -31,14 +33,12 @@ public class ReactiveTemplate implements ReactiveBehavior
         Double discount = agent.readProperty("discount-factor", Double.class,
                 0.95);
 
-        this.initState(topology, agent);
+        this.initState(topology);
         this.valueIteration(td, agent, discount);
 
         System.out.println("All possible states: ");
-        for (State s : stateList)
-        {
-            System.out.println(s);
-        }
+        stateList.forEach(System.out::println);
+        System.out.println(counter);
     }
 
     @Override
@@ -50,7 +50,7 @@ public class ReactiveTemplate implements ReactiveBehavior
 
         if (availableTask == null)
         {
-            currentState = new State(vehicle.getCurrentCity(), vehicle.getCurrentCity(), vehicle.homeCity());
+            currentState = new State(vehicle.getCurrentCity(), vehicle.getCurrentCity());
 
             State completeState = lookUpState(currentState);
             if (completeState != null)
@@ -60,7 +60,7 @@ public class ReactiveTemplate implements ReactiveBehavior
             } else {System.out.println("ERROR: No corresponding state found!");}
         } else
         {
-            currentState = new State(vehicle.getCurrentCity(), availableTask.deliveryCity, vehicle.homeCity());
+            currentState = new State(vehicle.getCurrentCity(), availableTask.deliveryCity);
 
             State completeState = lookUpState(currentState);
 
@@ -86,14 +86,14 @@ public class ReactiveTemplate implements ReactiveBehavior
      *
      * @param t topology
      */
-    private void initState(Topology t, Agent agent)
+    private void initState(Topology t)
     {
         cityList = t.cities();
         for (City from : t)
         {
             for (City to : t)
             {
-                stateList.add(new State(from, to, agent.vehicles().get(0).homeCity()));
+                stateList.add(new State(from, to));
             }
         }
     }
@@ -131,7 +131,7 @@ public class ReactiveTemplate implements ReactiveBehavior
 
                 s.updateBestReward(maxQ, tempBestAction);
             }
-
+            counter++;
         } while (!converge(0.0001));
     }
 
@@ -141,9 +141,9 @@ public class ReactiveTemplate implements ReactiveBehavior
      * @param currentCity current city
      * @param taskDestCity task destination city
      * @param reachableCity reachable city list after legal moves performed by the agent
-     * @param td task distrivution
+     * @param td task distribution
      * @param agent agent
-     * @param discountFactor sicount factor of the future reward
+     * @param discountFactor discount factor of the future reward
      *
      * @return Q(s)
      */
@@ -158,7 +158,7 @@ public class ReactiveTemplate implements ReactiveBehavior
             double cost;
             for (City nextPossibleTaskDest : cityList)
             {
-                State futureState = new State(nextCity, nextPossibleTaskDest, agent.vehicles().get(0).homeCity());
+                State futureState = new State(nextCity, nextPossibleTaskDest);
                 if (!nextPossibleTaskDest.equals(nextCity))
                 {
                     sum += discountFactor * td.probability(nextCity, nextPossibleTaskDest) * getBestValue(futureState);
@@ -247,6 +247,7 @@ public class ReactiveTemplate implements ReactiveBehavior
                 return state;
             }
         }
+        System.out.println("No state found!");
         return null;
     }
 }

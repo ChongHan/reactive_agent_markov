@@ -1,9 +1,9 @@
 package template;
 
 import com.sun.istack.internal.NotNull;
-import logist.agent.Agent;
 import logist.topology.Topology.City;
 
+import java.util.Random;
 
 /**
  * reactive Created by samsara on 09/10/2015.
@@ -16,24 +16,22 @@ public class State
     private double bestReward;
     private double pre_bestReward;
 
-    public State(City from, City to, City home)
+
+    public State(City from, City to)
     {
         this.from = from;
         this.to = to;
-        this.bestAction = home;
 
-        bestAction = from;
-        bestReward = pre_bestReward = 0;
+        Random random = new Random();
+
+        this.bestAction = from.randomNeighbor(random);
+        this.bestReward = - Double.MAX_VALUE;
+        this.pre_bestReward = - Double.MAX_VALUE;
     }
 
     @NotNull public City getBestAction()
     {
         return bestAction;
-    }
-
-    public void setBestAction(City bestAction)
-    {
-        this.bestAction = bestAction;
     }
 
     public City getFrom()
@@ -51,19 +49,10 @@ public class State
         return pre_bestReward;
     }
 
-    public void setPre_bestReward(double pre_bestReward)
-    {
-        this.pre_bestReward = pre_bestReward;
-    }
 
     @NotNull public double getBestReward()
     {
         return bestReward;
-    }
-
-    public void setBestReward(double bestReward)
-    {
-        this.bestReward = bestReward;
     }
 
     public boolean updateBestReward(double newBest, City newBestAction)
