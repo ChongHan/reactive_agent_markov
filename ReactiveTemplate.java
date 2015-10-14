@@ -110,6 +110,7 @@ public class ReactiveTemplate implements ReactiveBehavior
         City currentCity;
         City taskDest;
         List<City> neighbourList;
+        List<City> newList;
 
         do
         {
@@ -119,15 +120,18 @@ public class ReactiveTemplate implements ReactiveBehavior
                 taskDest = s.getTo();
                 neighbourList = s.getFrom().neighbors();
 
-                if (!currentCity.hasNeighbor(taskDest))
+                if (!currentCity.hasNeighbor(taskDest) && !currentCity.equals(taskDest))
                 {
-                    List<City> newList = new LinkedList<>(neighbourList);
+                    newList = new LinkedList<>(neighbourList);
                     newList.add(taskDest);
+                }
+                else
+                {
+                    newList = new LinkedList<>(neighbourList);
                 }
 
                 double maxQ;
-
-                maxQ = computeMaxQ(currentCity, taskDest, neighbourList, td, agent, discountFactor);
+                maxQ = computeMaxQ(currentCity, taskDest, newList, td, agent, discountFactor);
 
                 s.updateBestReward(maxQ, tempBestAction);
             }
