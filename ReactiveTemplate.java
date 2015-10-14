@@ -38,7 +38,7 @@ public class ReactiveTemplate implements ReactiveBehavior
 
         System.out.println("All possible states: ");
         stateList.forEach(System.out::println);
-        System.out.println(counter);
+        System.out.println("Number of iterations: " + counter);
     }
 
     @Override
@@ -136,7 +136,7 @@ public class ReactiveTemplate implements ReactiveBehavior
                 s.updateBestReward(maxQ, tempBestAction);
             }
             counter++;
-        } while (!converge(0.0001));
+        } while (!converge(0.00001));
     }
 
     /**
@@ -154,7 +154,7 @@ public class ReactiveTemplate implements ReactiveBehavior
     private double computeMaxQ(City currentCity, City taskDestCity, List<City> reachableCity, TaskDistribution td,
                                Agent agent, double discountFactor)
     {
-        double maxQ = 0;
+        double maxQ = - Double.MAX_VALUE;
 
         for (City nextCity : reachableCity)
         {
@@ -221,7 +221,7 @@ public class ReactiveTemplate implements ReactiveBehavior
      */
     private boolean converge(double epsilon)
     {
-        double maxDiff = 0;
+        double maxDiff = - Double.MAX_VALUE;
         double diff;
         for (State s : stateList)
         {
@@ -251,7 +251,7 @@ public class ReactiveTemplate implements ReactiveBehavior
                 return state;
             }
         }
-        System.out.println("No state found!");
+        System.out.println("ERROR: No state found!");
         return null;
     }
 }

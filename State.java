@@ -55,20 +55,11 @@ public class State
         return bestReward;
     }
 
-    public boolean updateBestReward(double newBest, City newBestAction)
+    public void updateBestReward(double newBest, City newBestAction)
     {
-        if (newBest > bestReward)
-        {
-            pre_bestReward = bestReward;
-            bestReward = newBest;
-            bestAction = newBestAction;
-
-//            System.out.println("After:" + pre_bestReward + "; " + bestReward + "; " + bestAction.toString());
-
-            return true;
-        }
-
-        return false;
+        pre_bestReward = bestReward;
+        bestReward = newBest;
+        bestAction = newBestAction;
     }
 
     @Override
